@@ -349,6 +349,7 @@ class CmdProc {
   static const unsigned int fnDAC_names;
   static const char * const fDAC_names[];
   static int fGetBufMethod;
+  static int fIgnoreReadbackErrors;
   
   bool fPixelConfigNeeded;
   unsigned int fTCT, fTRC, fTTK;
@@ -382,6 +383,7 @@ class CmdProc {
    unsigned int fDeser400XORChanges[nDaqChannelMax];
    unsigned int fRocReadBackErrors[nDaqChannelMax];
    unsigned int fNTBMHeader[nDaqChannelMax];
+   unsigned int fNEvent[nDaqChannelMax];
    unsigned int fDaqErrorCount[nDaqChannelMax]; //  any kind of error
    // new with fw4.6
    unsigned int fDeser400_frame_error[nDaqChannelMax];
@@ -417,6 +419,9 @@ class CmdProc {
    }
    int daqChannelFromTbmPort( unsigned int port){
        if (tbm08()){ return port/2 ; }
+       else if(fnTbmCore==4){
+          return (port+4) % 8; // cross your fingers
+       }
        else{ return port; }
    }
 
@@ -432,7 +437,6 @@ class CmdProc {
   #define TBM1B   0x8
   
   
-  bool fIgnoreReadbackErrors;
   bool verbose;
   bool redirected;
   bool fEchoExecs;  // echo command from executed files
