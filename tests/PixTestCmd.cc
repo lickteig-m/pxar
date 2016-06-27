@@ -2179,6 +2179,9 @@ void CmdProc::mytest() {
     Event event;
     rawEvent rawevent;
 
+//    tbmset("basee", TBMA, ((value1&0x7)<<5) | ((value2&0x7)<<2), 0xfc);
+    fApi->setTbmReg( "basea", 0, 0 );
+
     fApi->_dut->testPixel(5, 5, true,  5);
 
     fApi->daqTriggerSource("pg_dir");
@@ -2200,6 +2203,7 @@ void CmdProc::mytest() {
 
     getBuffer(fBuf);
     printData(fBuf, 0);
+//    printData(buf, 0);
 
     // copy the effect of "raw"
     out << "raw:\n";
@@ -3899,6 +3903,7 @@ int CmdProc::tb(Keyword kw){
     if( kw.match("adctest", s, fA_names, out ) ){ adctest(s); return 0;} 
     if( kw.match("adctest") ){ adctest("clk"); adctest("ctr"); adctest("sda"); adctest("rda"); adctest("sdata1"); adctest("sdata2"); return 0;} 
 	if( kw.match("tbmread") || kw.match("readback","tbm") ){return tbmreadback();}
+    if(kw.match("rdaselect", value)) {fApi->selectTbmRDA(value); return 0;}
     if( kw.match("readback")) { return readRocs();}
     if( kw.match("readback", value)){ return readRocs(value); }
     if( kw.match("readback", "vd")  ) { return readRocs(8, 0.016,"V");  }
