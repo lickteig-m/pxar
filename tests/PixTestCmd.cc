@@ -1598,6 +1598,8 @@ int CmdProc::find_timing(int npass){
         if(w160==8){
             d160=0; // anything goes, 0 often seems to be ok
         }
+        out << "160 MHz set to " << dec << (int) d160 << "  width=" << (int) w160 << "\n";
+        flush(out);
         
         
         // scan 400 MHz @ selected position
