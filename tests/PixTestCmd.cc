@@ -1210,9 +1210,6 @@ int CmdProc::countErrors(unsigned int ntrig, int ftrigkhz, int nroc, bool setup)
     }else{
         if  (fNumberOfEvents==ntrig) return 0;
         if(verbose) cout << "number of events (" << fNumberOfEvents << ") does not match triggers "<< ntrig << endl;
-        cout << "Error number of events (" << fNumberOfEvents << ") does not match triggers "<< ntrig <<"\n";
-        //daqStatus();
-        //printData(fBuf, 1);
         return 999;
     }
 }
@@ -1239,27 +1236,13 @@ int CmdProc::countGood(unsigned int nloop, unsigned int ntrig, int ftrigkhz, int
         for( unsigned int i=0;i<8; i++){  //legacy code
             fDeser400XOR1sum[i] += ( ((fDeser400XOR[0]|fDeser400XOR[1]) >> i) & 1);
          }
-         
-		 int ncherr=0;
+
          // channel-wise book-keeping
          for( unsigned int i=0; i<nDaqChannelMax; i++ ) {
              if ((fDaqErrorCount[i] == 0)  && (fNEvent[i]==ntrig) ){
                  fGoodLoops[i]++;
-             }else{
-				 cout << "countGood  loop " << k << "   channel " << (int) i 
-					<< "   errors " <<fDaqErrorCount[i] << "    events " << fNEvent[i] << endl;
-					ncherr++;
-			 }
-             if (k + 1 == nloop) {
-                 cout << "channel " << i << " , goods: " << fGoodLoops[i] << endl;
              }
          }
-        cout << "countGood: total good : " << good << " / " << (k+1) << "   nerr= " << nerr << endl;
-        if(ncherr>0){
-			
-			//printData(fBuf,0);
-			//daqStatus();
-		}
     }
     restoreDaq();
     return good;
@@ -1413,7 +1396,6 @@ int CmdProc::test_timing(int nloop, int d160, int d400, int rocdelay, int htdela
     tbmset("base4", ALLTBMS, 0x10); // reset once after changing phases
     pxar::mDelay( 10 );
 
-    cout << "phase settings:  " << d160 << " " << d400  << " " << rocdelay << " " << htdelay << " " << tokdelay << endl;
     return countGood(nloop, ntrig, ftrigkhz, nroc);
 }
 
@@ -1552,7 +1534,7 @@ int CmdProc::find_timing(int npass){
     // npass is the minimal number of passes
     
     string tbmtype = fApi->_dut->getTbmType();
-    if (! ((tbmtype=="tbm09c")||(tbmtype=="tbm08c")||(tbmtype=="tbm10")) ){
+    if (! ((tbmtype=="tbm09c")||(tbmtype=="tbm08c")||(tbmtype=="tbm10c")) ){
         out << "This only works for TBM08c/09c/10c! \n";
     }
 
@@ -1591,17 +1573,16 @@ int CmdProc::find_timing(int npass){
         tbmset("basee",ALLTBMS ,register_e);
         return 0;
     }
-    cout << "diag scan result = " << (int) d400 << endl;
+    if (verbose) cout << "diag scan result = " << (int) d400 << endl;
     
     for(int pass=0; pass<3; pass++){
         
-        cout << " pass " << pass << endl;
+        if (verbose) cout << " pass " << pass << endl;
          // scan 160 MHz @ selected position
         int test160[8]={0,0,0,0,0,0,0,0};
         for (uint8_t m=0; m<8; m++){
             if (pass==0){
                 test160[m] = test_timing(nloop, m, d400);
-                cout << "pos " << int(m) << ": " << test160[m] << endl;
             }else{
                 test160[m] = test_timing(nloop, m, d400, rocdelay, htdelay, tokendelay);
             }
@@ -1617,8 +1598,6 @@ int CmdProc::find_timing(int npass){
         if(w160==8){
             d160=0; // anything goes, 0 often seems to be ok
         }
-        out << "160 MHz set to " << dec << (int) d160 << "  width=" << (int) w160 << "\n";
-        flush(out);
         
         
         // scan 400 MHz @ selected position
@@ -2152,8 +2131,7 @@ int CmdProc::tbmread(uint8_t regId, int hubid){
 			   bool valid = (S==(regId | 1))  && (H==hubId) && (P==4)
 				&& !compS3 && !compRW && !compD4 && !compD0;
 
-                cout << "H = " << int(H) << ", hubid = " << int(hubId) << ", S = " << int(S) << ", D = " << int(D) << endl;
-				if (valid){
+                if (valid){
 					setTestboardDelay("all");
 					return (int) D;
 				}
@@ -4297,15 +4275,6 @@ int CmdProc::tb(Keyword kw){
     if (kw.match("daqstart")){ bool stat=fApi->daqStart(); out << "stat=" << stat << "\n"; return 0;}
     if (kw.match("daqstop")){ bool stat=fApi->daqStop();out << "stat=" << stat << "\n";  return 0;}
     if (kw.match("programDUT")||kw.match("clear")){ fApi->programDUT(); return 0;}
-
-    // arm pixel i/i on roc i for all rocs
-    if (kw.match("armall")) {
-        for (int i = 0; i < 16; ++i) {
-            fApi->_dut->testPixel(i, i, true, i);
-            fApi->_dut->maskPixel(i, i, false, i);
-        }
-        return 0;
-    }
     
     return -1;
 }
